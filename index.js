@@ -212,9 +212,16 @@ module.exports = function (app) {
       }
     }
 
-    scanner = useBleManager ? new BleManagerScanner(app, PLUGIN_ID, log) : new Scanner(log);
-
     const devices = (options.devices || []).filter((d) => d.enabled !== false);
+
+    // Once specific devices are configured, matching is done purely by MAC
+    // address (see the `discovered` handler below) — the scanner's own
+    // Bluetti-name-prefix filter is only useful for the discovery/logging
+    // mode below and would otherwise silently drop a configured device whose
+    // advertised name isn't recognised (or isn't reported at all by a given
+    // BLE transport), leaving it stuck "Waiting for device(s)" forever.
+    const scannerOpts = { includeAll: devices.length > 0 };
+    scanner = useBleManager ? new BleManagerScanner(app, PLUGIN_ID, log, scannerOpts) : new Scanner(log, scannerOpts);
 
     if (devices.length === 0) {
       // Discovery-only mode: log anything Bluetti-shaped that appears, then

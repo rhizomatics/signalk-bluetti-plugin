@@ -2,6 +2,10 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.2]
+
+- Fix for device not recognized when using the new BLE Manager option
+
 ## [2.0.1]
 
 - When using BLE Manager, repeat scans if no device found initially
