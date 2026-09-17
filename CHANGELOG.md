@@ -2,6 +2,10 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.3]
+- **Direct BlueZ connection**
+  - Fix lifecycle listener when there's no bluetooth adaptor present
+
 ## [2.1.2]
 
 - **Direct BlueZ connection**
