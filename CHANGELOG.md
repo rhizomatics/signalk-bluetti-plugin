@@ -2,11 +2,18 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.1]
+
+- **BLE Manager**
+  - BLE Manager default switched off again, after a race condition was found in the SignalK server's BLE Manager (a first GATT write can lose a race against BlueZ's own service resolution, surfacing as a `WriteValue` dbus error) — direct `bluez` access remains solid, so it's the safe default again until that's fixed upstream
+- **Elite 100V2**
+  - `ac_output_voltage` now publishes to `electrical.inverters.{name}.ac.lineNeutralVoltage` instead of the non-standard `ac.voltage`, so SignalK clients show it with a "V" unit like other voltages
+
 ## [2.1.0]
 
 - **BLE Manager**
-- This is now tested as stable, and using it means much less chance of interference between BLE plugins on the same server, so it is now the default option if enabled on the server
-- BLE Manager can be switched off from plugin config if you want to go back to direct `bluez` access
+  - This is now tested as stable, and using it means much less chance of interference between BLE plugins on the same server, so it is now the default option if enabled on the server
+  - BLE Manager can be switched off from plugin config if you want to go back to direct `bluez` access
 - **Elite 100V2**
   - Additional mappings to monitor AC output voltage when inverter on, and AC input current from shore power
 - **Decimal Values**
