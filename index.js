@@ -70,6 +70,11 @@ module.exports = function (app) {
   const DISCOVERY_SCAN_MS = 15000;
   const DISCOVERY_REST_MS = 45000;
 
+  // How long to run BlueZ discovery when a connected device's D-Bus object has
+  // gone missing (see lib/device.js's isDeviceMissingError) — long enough for
+  // BlueZ to receive an advertisement and recreate it.
+  const REDISCOVER_SCAN_MS = 20000;
+
   const defaultUserDir = defaultUserRegistersDir(app);
   const builtins = yamlModelNames(DEVICES_DIR);
   // Models available for the dropdown at schema-render time — bundled plus
@@ -362,6 +367,18 @@ module.exports = function (app) {
     return found;
   }
 
+  // Direct-BlueZ only: BlueZ can forget an unpaired device it once knew about
+  // (bluetoothd restart, or its own cache eviction after a while out of range),
+  // after which the plugin's persisted node-ble Device object can never
+  // reconnect on its own — nothing short of a fresh scan makes BlueZ recreate
+  // the device's D-Bus object. Safe to call repeatedly: Scanner.startScan() is
+  // a no-op while a scan is already running, and briefly co-existing with an
+  // in-progress connection attempt is fine (BlueZ handles scan+connect
+  // coexistence at the adapter level — see the discovered handler above).
+  function triggerRediscoveryScan() {
+    if (scanner) void scanner.startScan(REDISCOVER_SCAN_MS);
+  }
+
   function startDevice(
     cfg,
     bleDevice,
@@ -427,6 +444,7 @@ module.exports = function (app) {
           pollIntervalMs: pollIntervalSeconds * 1000,
           xorKey,
           log,
+          onDeviceMissing: triggerRediscoveryScan,
         });
 
     device.on("connected", () => {

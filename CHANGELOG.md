@@ -2,6 +2,11 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.2]
+
+- **Direct BlueZ connection**
+  - Fixed a permanent reconnect failure (`Connect error: interface not found in proxy object: org.bluez.Device1`) when using direct `bluez` access (the default) — BlueZ can forget an unpaired device it once knew about (e.g. after a `bluetoothd` restart, or its own cache eviction after a while out of range), and the plugin had no way to recover since it only scans once at startup. It now runs a short rediscovery scan when this happens, letting BlueZ relearn the device so the next reconnect attempt can succeed
+
 ## [2.1.1]
 
 - **BLE Manager**
