@@ -17,9 +17,9 @@ The requirements below are only to make SignalK work with Bluetooth Low Energy, 
 
 ### SignalK BLE Manager
 
-SignalK server 2.31.0 added a server-managed [BLE API](https://demo.signalk.org/documentation/Developing/REST_APIs/BLE_API.html) so multiple BLE plugins can share one adapter (or a remote gateway) through the server instead of each opening its own BlueZ session.
+SignalK server 2.31.0 added a server-managed [BLE API](https://demo.signalk.org/documentation/Developing/REST_APIs/BLE_API.html) so multiple BLE plugins can share one adapter (or a remote gateway) through the server instead of each opening its own BlueZ session, and often causing problems between plugins.
 
-This plugin supports this with the **Use the SignalK BLE Manager API** setting (off by default, and only shown once your server is on 2.31.0+). It also requires either a local bluetooth adapter, or a BLE gateway to be configured - switch on the server's own **Local Bluetooth Adapter** in **Server → Settings → Bluetooth** and monitor it in the **Data -> BLE Manager** page.
+This plugin supports this with the **Use the SignalK BLE Manager API** setting (on by default, only shown once your server is on 2.31.0+ and BLE Manager enabled). It also requires either a local bluetooth adapter, or a BLE gateway to be configured - switch on the server's own **Local Bluetooth Adapter** in **Server → Settings → Bluetooth** and monitor it in the **Data -> BLE Manager** page.
 
 #### SignalK server
 
