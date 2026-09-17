@@ -97,7 +97,7 @@ describe("devices/ac200p.yaml", () => {
 });
 
 describe("devices/el100v2.yaml", () => {
-  const seed = { 102: 90, 140: 120, 142: 1, 144: 1, 146: 300, 1314: 2300 };
+  const seed = { 102: 90, 140: 120, 142: 1, 144: 1, 146: 300, 1314: 2300, 1315: 30, 1511: 2400 };
   const { values } = simulatePoll("el100v2", seed);
 
   test("publishes the fixed model facts", () => {
@@ -106,9 +106,13 @@ describe("devices/el100v2.yaml", () => {
     assert.equal(values.get("electrical.batteries.test.capacity.nominal"), 1024 * 3600);
   });
 
-  test("derives AC charger current/voltage (no raw current register on this model)", () => {
+  test("uses the real ac_input_current register rather than deriving it from power/voltage", () => {
     assert.equal(values.get("electrical.chargers.test.voltage"), 230);
-    assert.equal(values.get("electrical.chargers.test.current"), 300 / 230);
+    assert.equal(values.get("electrical.chargers.test.current"), 3); // raw 30 * scale 0.1
+  });
+
+  test("publishes ac_output_voltage", () => {
+    assert.equal(values.get("electrical.inverters.test.ac.voltage"), 240);
   });
 
   test("derives DC output port current/voltage from the register map's fixed dc_output_voltage", () => {

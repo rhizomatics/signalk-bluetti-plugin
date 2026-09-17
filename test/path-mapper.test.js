@@ -2,7 +2,7 @@
 
 const { test, describe } = require("node:test");
 const assert = require("node:assert/strict");
-const { buildDelta, resolvePath, convertUnits } = require("../lib/path-mapper");
+const { buildDelta, resolvePath, convertUnits, roundToScale } = require("../lib/path-mapper");
 
 describe("convertUnits", () => {
   test("converts Celsius to Kelvin", () => {
@@ -35,6 +35,11 @@ describe("convertUnits", () => {
 
   test("passes through non-numeric values unchanged, even with a convertible unit", () => {
     assert.equal(convertUnits("LiFePO4", "%"), "LiFePO4");
+  });
+
+  test("cleans up floating-point noise from a register's scale multiplication", () => {
+    // 2298 * 0.1 === 229.79999999999998 in IEEE 754 double math.
+    assert.equal(roundToScale(2298 * 0.1, 1), 229.8);
   });
 
   test("is case-insensitive and trims whitespace on the unit", () => {

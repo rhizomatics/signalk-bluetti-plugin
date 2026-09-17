@@ -35,6 +35,7 @@ describe("loadRegisters", () => {
       offset: 0,
       unit: "%",
       signalkPath: "",
+      decimals: 0,
     });
   });
 
@@ -60,6 +61,7 @@ describe("loadRegisters", () => {
       offset: 5,
       unit: "A",
       signalkPath: "electrical.batteries.{name}.current",
+      decimals: 1,
     });
   });
 

@@ -106,8 +106,8 @@ module.exports = function (app) {
               type: "boolean",
               title: "Use the SignalK BLE Manager API",
               description:
-                "Route all Bluetooth access through SignalK server's BLE Manager API (server >= 2.31.0) instead of connecting to BlueZ directly, so this plugin can share the BLE adapter with other BLE plugins. Requires the server to have a Bluetooth local adapter or BLE gateway available (Server → Settings → Bluetooth).",
-              default: false,
+                "Route all Bluetooth access through SignalK server's BLE Manager API (server >= 2.31.0) instead of connecting to BlueZ directly, so this plugin can share the BLE adapter with other BLE plugins instead of opening its own BlueZ session. On by default when available; disable if you hit issues and want to fall back to direct BlueZ access. Requires the server to have a Bluetooth local adapter or BLE gateway available (Server → Settings → Bluetooth).",
+              default: true,
             },
           }
         : {}),
@@ -195,7 +195,7 @@ module.exports = function (app) {
       return;
     }
 
-    const useBleManager = bleApiAvailable && options.useBleManagerApi === true;
+    const useBleManager = bleApiAvailable && options.useBleManagerApi !== false;
     if (options.useBleManagerApi === true && !bleApiAvailable) {
       log(
         "useBleManagerApi is enabled but this SignalK server has no BLE Manager API (requires >= 2.31.0) — falling back to direct BlueZ access.",

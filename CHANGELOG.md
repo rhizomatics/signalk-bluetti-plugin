@@ -2,6 +2,17 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.0]
+
+- **BLE Manager**
+ - This is now tested as stable, and using it means much less chance of interference between BLE plugins on the same server, so it is now the default option if enabled on the server
+  - BLE Manager can be switched off from plugin config if you want to go back to direct `bluez` access
+- **Elite 100V2**
+  - Additional mappings to monitor AC output voltage when inverter on, and AC input current from shore power
+- **Decimal Values**
+  - All values now shown using same precision as offered by Bluetti, so volts/amps/watts/temperature will show with decimal places rather than as integers if the device supports that
+
+
 ## [2.0.3]
 
 - Attempts to auto-release now a previous stuck GATT claim when using the new BLE Manager on SignalK

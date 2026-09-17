@@ -31,6 +31,19 @@ fields:
     register: 1314
     scale: 0.1
     unit: V
+  # Addresses inferred from the same register block confirmed on sibling
+  # non-V2 models (ac180, ac70, ac180t), which share 140/142/144/146 and 1314
+  # with this device. Verified against a real EL100V2: 1315 read 0 A with AC
+  # input disconnected, and 1511 read 229.8 V (raw 2298, scale 0.1) with AC
+  # output switched on — confirming both the addresses and the 0.1 scale.
+  ac_input_current:
+    register: 1315
+    scale: 0.1
+    unit: A
+  ac_output_voltage:
+    register: 1511
+    scale: 0.1
+    unit: V
 constants:
   battery_chemistry: LiFePO4
   total_capacity:
