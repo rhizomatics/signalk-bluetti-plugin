@@ -112,7 +112,7 @@ describe("devices/el100v2.yaml", () => {
   });
 
   test("publishes ac_output_voltage", () => {
-    assert.equal(values.get("electrical.inverters.test.ac.voltage"), 240);
+    assert.equal(values.get("electrical.inverters.test.ac.lineNeutralVoltage"), 240);
   });
 
   test("derives DC output port current/voltage from the register map's fixed dc_output_voltage", () => {
