@@ -219,6 +219,19 @@ module.exports = function (app) {
 
     const devices = (options.devices || []).filter((d) => d.enabled !== false);
 
+    // A GATT claim taken out under our pluginId in a previous session (e.g. an
+    // ungraceful stop, or the user having since switched useBleManagerApi off)
+    // otherwise lingers in the server's BLE Manager state until the whole
+    // server restarts — release it now regardless of which transport we're
+    // about to use this session. releaseGATTDevice() is a no-op if we don't
+    // hold the claim, and rejects (harmlessly, for us to ignore) if someone
+    // else does.
+    if (bleApiAvailable) {
+      for (const cfg of devices) {
+        app.bleApi.releaseGATTDevice(cfg.address, PLUGIN_ID).catch(() => {});
+      }
+    }
+
     // Once specific devices are configured, matching is done purely by MAC
     // address (see the `discovered` handler below) — the scanner's own
     // Bluetti-name-prefix filter is only useful for the discovery/logging

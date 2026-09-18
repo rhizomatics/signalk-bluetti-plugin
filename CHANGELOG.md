@@ -2,6 +2,11 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.4]
+
+- Release stale GATT claims on plugin start
+  - Includes clearing status on BLE Manager if option to use that switched off and plugin restarts
+
 ## [2.1.3]
 
 - **Direct BlueZ connection**
@@ -16,7 +21,7 @@ All notable changes to this plugin are documented here. Format loosely follows [
 
 - **BLE Manager**
   - BLE Manager default switched back to off
-    - Race condition was found in SignalK server BLE Manager (a first GATT write can lose a race against BlueZ's own service resolution, surfacing as a `WriteValue` dbus error) — direct `bluez` access remains solid, so it's the safe default again 
+    - Race condition was found in SignalK server BLE Manager (a first GATT write can lose a race against BlueZ's own service resolution, surfacing as a `WriteValue` dbus error) — direct `bluez` access remains solid, so it's the safe default again
     - Tracking BLE Manager fixes [PR#3051](https://github.com/SignalK/signalk-server/pull/3051) and [PR#3057](https://github.com/SignalK/signalk-server/pull/3057)
 
 - **Elite 100V2**
