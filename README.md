@@ -136,32 +136,9 @@ The fiddly way to do it should be as below (however there's a current [misconfig
 3. Go to the _Unit Preferences_ section of the _Data_ menu in SignalK
 4. Use the _Upload_ button to upload your amended preferences preset and select it in the preset dropdown
 
-### SignalK starts before the Bluetooth daemon — does the plugin need `bluetoothd` running at boot?
+### Bluetooth Issues
 
-The plugin retries BLE adapter initialisation with backoff (starting at 2s, capping at 30s) if `bluetoothd`/D-Bus isn't up yet when the plugin starts, so a slow-starting Bluetooth stack on boot will no longer strand it — it keeps retrying until the adapter appears rather than failing once and giving up. You'll see `BLE adapter not ready … — retrying in Ns …` in the SignalK logs in the meantime.
-
-That said, it's cleaner to fix the boot ordering at the systemd level so the plugin finds the adapter ready on its first attempt. If SignalK runs as a systemd service (`systemctl status signalk`) and its unit file has no `[Unit]` section (check with `systemctl cat signalk`), add one:
-
-```bash
-sudo systemctl edit signalk.service
-```
-
-This opens an override file — add:
-
-```ini
-[Unit]
-After=bluetooth.target
-Wants=bluetooth.target
-```
-
-Save and exit, then:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart signalk
-```
-
-This tells systemd to start `bluetoothd` first and wait for it before starting SignalK, rather than relying on both racing to start in parallel at boot.
+There's a long list of of advice and fixes for Bluetooth Low Energy on SignalK at the [eInk Label Bluetooth](https://signalk-einklabel.rhizomatics.org.uk/bluetooth/#ble-manager-readiness) page that covers Bluetti use too, although Bluetti isn't as tricky to work with as some eInk labels.
 
 ### My station isn't supported
 
