@@ -78,3 +78,6 @@ web_modules/
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+
+# Claude Code: personal permissions stay local; share only deliberate project settings in settings.json
+.claude/settings.local.json
