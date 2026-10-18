@@ -1,8 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(npm test *)",
-      "Bash(npm run *)"
-    ]
+    "allow": ["Bash(npm test *)", "Bash(npm run *)"]
   }
 }
