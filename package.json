@@ -17,7 +17,7 @@
     "signalk-node-server-plugin",
     "solar"
   ],
-  "homepage": "https://github.com/rhizomatics/signalk-bluetti-plugin.git",
+  "homepage": "https://github.com/rhizomatics/signalk-bluetti-plugin#readme",
   "bugs": {
     "url": "https://github.com/rhizomatics/signalk-bluetti-plugin/issues"
   },
