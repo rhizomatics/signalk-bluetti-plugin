@@ -1,4 +1,4 @@
 [tools]
 gh = "latest"
-# 22.23.4: first 22.x without the distrusted eMudhra/emSign root CAs
+# 22.23.4: first 22.x without the emSign G3/C1/C3 roots (NSS 3.131.1)
 node = "22.23.4"
