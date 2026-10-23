@@ -16,3 +16,6 @@ jobs:
       # uses test-command (default `npm test`), since the coverage-threshold
       # CLI flags below need Node >=22.8.
       coverage-command: npm run test:coverage
+      # Pin the 22 line to 22.23.4, the first 22.x without the distrusted
+      # eMudhra/emSign root CAs (the default would be a bare "22").
+      node-versions: '["22.23.4", "24"]'

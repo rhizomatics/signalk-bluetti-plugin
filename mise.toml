@@ -1,2 +1,4 @@
 [tools]
 gh = "latest"
+# 22.23.4: first 22.x without the distrusted eMudhra/emSign root CAs
+node = "22.23.4"
