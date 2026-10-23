@@ -2,6 +2,16 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.0]
+
+- Device address is now picked from a dropdown of discovered Bluetti devices (including any the SignalK BLE Manager can see) instead of typed in
+- Recognise Bluetti units that advertise no BLE name, by PowerOak's manufacturer ID (3846) or the BLE Manager's "SHENZHEN POWEROAK NEWENER CO., LTD" vendor name
+- Tighter Bluetti name matching, so unrelated devices such as "Apple, Inc." are no longer mistaken for Bluetti models
+- The new SignalK **BLE Manager** is now the default
+  - Ensures this plugin co-operates well with other BLE plugins
+  - Recommend use of `v2.34.0` of SignalK as minimum, which has several important BLE fixes
+  - Original direct mode remains working as an optin to fall back to
+
 ## [2.1.4]
 
 - Release stale GATT claims on plugin start

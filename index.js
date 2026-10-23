@@ -26,6 +26,16 @@ function findBluettiEncryptionCsvInHome() {
   }
 }
 
+// Devices that advertise no local name show up under the BLE Manager's vendor
+// name substitute (e.g. "SHENZHEN POWEROAK NEWENER CO., LTD") — label those
+// simply as Bluetti. RSSI helps tell this boat's unit from a neighbour's.
+function formatDeviceLabel(d) {
+  const name = !d.name || /poweroak/i.test(d.name) ? "Bluetti" : d.name;
+  const status = d.configuredOnly ? " · not seen since restart" : "";
+  const rssi = typeof d.rssi === "number" && d.rssi !== 0 ? ` · ${d.rssi}dBm` : "";
+  return `${name} (${d.address})${rssi}${status}`;
+}
+
 function yamlModelNames(dir) {
   try {
     return fs
@@ -59,7 +69,11 @@ module.exports = function (app) {
 
   let scanner = null;
   let activeDevices = [];
-  let scanResultCache = [];
+  // Bluetti devices seen so far (normalised address → { address, name, rssi }),
+  // offered as choices in the config form's address dropdown. Deliberately
+  // kept across stop()/start() — saving the config restarts the plugin, and
+  // the list shouldn't empty out from under the form each time.
+  const discoveredDevices = new Map();
   let waitingStatusTimer = null;
   let discoveryRestTimer = null;
 
@@ -95,7 +109,14 @@ module.exports = function (app) {
 
   // ── Config schema ──────────────────────────────────────────────────────
 
-  plugin.schema = {
+  // A function rather than a static object so the address dropdown reflects
+  // whatever has been discovered by the time the config page is opened.
+  plugin.schema = function () {
+    refreshFromBleManager();
+    return buildSchema(knownDeviceChoices());
+  };
+
+  const buildSchema = (choices) => ({
     type: "object",
     required: [],
     properties: {
@@ -111,8 +132,8 @@ module.exports = function (app) {
               type: "boolean",
               title: "Use the SignalK BLE Manager API",
               description:
-                "Route all Bluetooth access through SignalK server's BLE Manager API (server >= 2.31.0) instead of connecting to BlueZ directly, so this plugin can share the BLE adapter with other BLE plugins. Requires the server to have a Bluetooth local adapter or BLE gateway available (Server → Settings → Bluetooth).",
-              default: false,
+                "Route all Bluetooth access through SignalK server's BLE Manager API (server >= 2.31.0) instead of connecting to BlueZ directly, so this plugin can share the BLE adapter with other BLE plugins. Requires the server to have a Bluetooth local adapter or BLE gateway available (Server → Settings → Bluetooth). SignalK server 2.34.0 or later recommended. Turn off to fall back to direct BlueZ access.",
+              default: true,
             },
           }
         : {}),
@@ -137,8 +158,11 @@ module.exports = function (app) {
             },
             address: {
               type: "string",
-              title: "BLE MAC address",
-              description: "e.g. aa:bb:cc:dd:ee:ff  — run a scan to find this",
+              title: "Device",
+              description:
+                "Bluetti devices discovered nearby. If yours isn't listed, make sure it's powered on and in range, give the plugin a minute to scan, then reopen this page.",
+              enum: choices.length > 0 ? choices.map((d) => d.address) : [""],
+              enumNames: choices.length > 0 ? choices.map(formatDeviceLabel) : ["No Bluetti devices detected yet"],
             },
             name: {
               type: "string",
@@ -170,18 +194,71 @@ module.exports = function (app) {
         default: [],
       },
     },
-  };
+  });
 
   plugin.uiSchema = {
     registersDir: { "ui:placeholder": defaultUserDir || "e.g. /home/pi/.signalk/bluetti" },
     devices: {
       items: {
-        address: { "ui:placeholder": "aa:bb:cc:dd:ee:ff" },
         name: { "ui:placeholder": "house" },
         encryptionCsvPath: { "ui:placeholder": "e.g. /path/to/19e1646709e0421b755fa9dda74.csv" },
       },
     },
   };
+
+  // ── Device discovery for the config dropdown ───────────────────────────
+
+  const normaliseAddress = (addr) => String(addr).toLowerCase().replace(/:/g, "");
+
+  function rememberDevice(address, name, rssi) {
+    const key = normaliseAddress(address);
+    const prev = discoveredDevices.get(key);
+    discoveredDevices.set(key, { address, name: name || (prev && prev.name) || "", rssi });
+  }
+
+  // The BLE Manager API keeps its own table of everything any provider has
+  // seen, regardless of which transport this plugin uses or whether our own
+  // scan is running — pick up Bluettis from it too. Async, so this lands in
+  // time for the next render of the config page rather than the current one.
+  function refreshFromBleManager() {
+    if (!bleApiAvailable) return;
+    let isBluettiDevice;
+    try {
+      ({ isBluettiDevice } = require("./lib/scanner"));
+    } catch {
+      return;
+    }
+    Promise.resolve(app.bleApi.getDevices())
+      .then((devices) => {
+        for (const d of devices || []) {
+          if (d && d.mac && isBluettiDevice(d.name)) rememberDevice(d.mac, d.name, d.rssi);
+        }
+      })
+      .catch((err) => log(`BLE Manager getDevices() failed: ${err.message}`));
+  }
+
+  // Discovered devices, plus any already-configured address that hasn't been
+  // re-seen since the server started — otherwise a saved selection would drop
+  // out of the dropdown's enum and look like it had been lost.
+  function knownDeviceChoices() {
+    const byAddr = new Map(discoveredDevices);
+    let configured = [];
+    try {
+      configured = (app.readPluginOptions().configuration || {}).devices || [];
+    } catch {}
+    for (const cfg of configured) {
+      if (cfg && cfg.address && !byAddr.has(normaliseAddress(cfg.address))) {
+        byAddr.set(normaliseAddress(cfg.address), { address: cfg.address, name: cfg.name, configuredOnly: true });
+      }
+    }
+    // Keep the configured spelling of an address as the enum value, so a saved
+    // "dc:06:…" still validates against a discovered "DC:06:…".
+    for (const cfg of configured) {
+      const entry = cfg && cfg.address && byAddr.get(normaliseAddress(cfg.address));
+      if (entry) entry.address = cfg.address;
+    }
+    return [...byAddr.values()].sort((a, b) => a.address.localeCompare(b.address));
+  }
 
   // ── Start ──────────────────────────────────────────────────────────────
 
@@ -200,7 +277,9 @@ module.exports = function (app) {
       return;
     }
 
-    const useBleManager = bleApiAvailable && options.useBleManagerApi === true;
+    // On by default whenever the server offers it — only an explicit `false`
+    // opts back out to direct BlueZ.
+    const useBleManager = bleApiAvailable && options.useBleManagerApi !== false;
     if (options.useBleManagerApi === true && !bleApiAvailable) {
       log(
         "useBleManagerApi is enabled but this SignalK server has no BLE Manager API (requires >= 2.31.0) — falling back to direct BlueZ access.",
@@ -246,9 +325,7 @@ module.exports = function (app) {
       // rest and scan again — keeps the plugin periodically visible on the
       // BLE Manager admin page instead of scanning once and going quiet.
       scanner.on("discovered", ({ address, name }) => {
-        if (!scanResultCache.some((d) => d.address === address)) {
-          scanResultCache.push({ address, name });
-        }
+        rememberDevice(address, name);
         app.setPluginStatus(`Discovered: ${name} [${address}] — copy address into plugin config`);
       });
       scanner.on("scanComplete", (found) => {
@@ -283,8 +360,8 @@ module.exports = function (app) {
     const pending = new Map(devices.map((cfg) => [normalise(cfg.address), cfg]));
     const deps = { BluettiDevice, BleManagerDevice, useBleManager, loadRegisters, buildDelta, readEncryptionKey, userRegistersDir };
 
-    scanner.on("discovered", ({ address, name, device: bleDevice }) => {
-      scanResultCache.push({ address, name });
+    scanner.on("discovered", ({ address, name, device: bleDevice, isBluetti }) => {
+      if (isBluetti) rememberDevice(address, name);
       const cfg = pending.get(normalise(address));
       if (cfg) {
         pending.delete(normalise(address));
@@ -490,7 +567,6 @@ module.exports = function (app) {
       scanner.stopAll();
       scanner = null;
     }
-    scanResultCache = [];
   };
 
   return plugin;

@@ -1,5 +1,10 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+# Node for the oxlint/oxfmt hook environments (nodeenv downloads it): 22.23.4
+# is the first 22.x on NSS 3.131.1, which drops the distrusted eMudhra roots
+# emSign ECC Root CA - G3, emSign Root CA - C1 and emSign ECC Root CA - C3.
+default_language_version:
+  node: "22.23.4"
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
