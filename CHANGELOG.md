@@ -2,7 +2,7 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## Unreleased
+## [2.2.1]
 
 - Fix battery time remaining (`electrical.batteries.<name>.capacity.timeRemaining`), which was published in minutes where SignalK expects seconds, so it read 60 times too low (AC200P, AC50B, AC70, EL30V2, Handsfree 1)
 
