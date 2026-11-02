@@ -22,6 +22,11 @@ describe("convertUnits", () => {
     assert.equal(convertUnits(50, "soc"), 0.5);
   });
 
+  test("converts minutes and hours to seconds", () => {
+    assert.equal(convertUnits(90, "min"), 5400);
+    assert.equal(convertUnits(2, "h"), 7200);
+  });
+
   test("passes through units with no registered conversion", () => {
     assert.equal(convertUnits(42, "V"), 42);
     assert.equal(convertUnits(42, "A"), 42);
