@@ -2,6 +2,10 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## Unreleased
+
+- Fix battery time remaining (`electrical.batteries.<name>.capacity.timeRemaining`), which was published in minutes where SignalK expects seconds, so it read 60 times too low (AC200P, AC50B, AC70, EL30V2, Handsfree 1)
+
 ## [2.2.0]
 
 - Device address is now picked from a dropdown of discovered Bluetti devices (including any the SignalK BLE Manager can see) instead of typed in

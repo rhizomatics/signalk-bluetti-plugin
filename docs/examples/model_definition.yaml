@@ -20,7 +20,7 @@
 #       count: <number>         # registers this field spans; inferred from `type` if omitted
 #       scale: <number>         # multiply the raw value by this (default 1)
 #       offset: <number>        # add after scaling (default 0)
-#       unit: V                 # V | A | W | Wh | kWh | % | °C | Hz | min — drives SignalK unit conversion
+#       unit: V                 # V | A | W | Wh | kWh | % | °C | Hz | min | h — drives SignalK unit conversion
 #       path: electrical.batteries.{name}.voltage   # optional override; {name} is the per-device name from config
 #
 #   constants: fixed, non-register facts about this model — a bare scalar
