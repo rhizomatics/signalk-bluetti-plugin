@@ -89,6 +89,10 @@ module.exports = function (app) {
   // BlueZ to receive an advertisement and recreate it.
   const REDISCOVER_SCAN_MS = 20000;
 
+  // Upper bound on how long stop() waits for devices to disconnect and release
+  // their GATT claims — BlueZ/D-Bus calls can hang, and the server shouldn't.
+  const STOP_TIMEOUT_MS = 5000;
+
   const defaultUserDir = defaultUserRegistersDir(app);
   const builtins = yamlModelNames(DEVICES_DIR);
   // Models available for the dropdown at schema-render time — bundled plus
@@ -263,14 +267,14 @@ module.exports = function (app) {
   // ── Start ──────────────────────────────────────────────────────────────
 
   plugin.start = function (options) {
-    let Scanner, BluettiDevice, BleManagerScanner, BleManagerDevice, loadRegisters, buildDelta, readEncryptionKey;
+    let Scanner, BluettiDevice, BleManagerScanner, BleManagerDevice, loadRegisters, buildDelta, buildMetaDelta, readEncryptionKey;
     try {
       Scanner = require("./lib/scanner");
       BluettiDevice = require("./lib/device");
       BleManagerScanner = require("./lib/ble-manager-scanner");
       BleManagerDevice = require("./lib/ble-manager-device");
       ({ loadRegisters } = require("./lib/register-loader"));
-      ({ buildDelta } = require("./lib/path-mapper"));
+      ({ buildDelta, buildMetaDelta } = require("./lib/path-mapper"));
       ({ readEncryptionKey } = require("./lib/encryption"));
     } catch (err) {
       app.setPluginError(`Dependency load failed: ${err.message}. Run: npm install inside the plugin directory.`);
@@ -358,7 +362,16 @@ module.exports = function (app) {
     // Build address → cfg lookup (normalise to lowercase, no colons)
     const normalise = (addr) => addr.toLowerCase().replace(/:/g, "");
     const pending = new Map(devices.map((cfg) => [normalise(cfg.address), cfg]));
-    const deps = { BluettiDevice, BleManagerDevice, useBleManager, loadRegisters, buildDelta, readEncryptionKey, userRegistersDir };
+    const deps = {
+      BluettiDevice,
+      BleManagerDevice,
+      useBleManager,
+      loadRegisters,
+      buildDelta,
+      buildMetaDelta,
+      readEncryptionKey,
+      userRegistersDir,
+    };
 
     scanner.on("discovered", ({ address, name, device: bleDevice, isBluetti }) => {
       if (isBluetti) rememberDevice(address, name);
@@ -473,7 +486,7 @@ module.exports = function (app) {
     cfg,
     bleDevice,
     bleName,
-    { BluettiDevice, BleManagerDevice, useBleManager, loadRegisters, buildDelta, readEncryptionKey, userRegistersDir },
+    { BluettiDevice, BleManagerDevice, useBleManager, loadRegisters, buildDelta, buildMetaDelta, readEncryptionKey, userRegistersDir },
   ) {
     const { address, name, encryptionCsvPath = "", pollIntervalSeconds = 10 } = cfg;
     const registerCache = new Map(); // last-known value per field_name, across polls — see buildDelta
@@ -537,8 +550,15 @@ module.exports = function (app) {
           onDeviceMissing: triggerRediscoveryScan,
         });
 
+    // Units for the paths we publish outside the SignalK spec — once per
+    // device session, on first connect (the server keeps metadata after that).
+    let metaSent = false;
     device.on("connected", () => {
       app.setPluginStatus(`Connected to ${name} [${address}]`);
+      if (metaSent) return;
+      metaSent = true;
+      const metaDelta = buildMetaDelta(fields, name, PLUGIN_ID);
+      if (metaDelta) app.handleMessage(PLUGIN_ID, metaDelta);
     });
 
     device.on("registers", (registers) => {
@@ -552,8 +572,12 @@ module.exports = function (app) {
 
   // ── Stop ───────────────────────────────────────────────────────────────
 
+  // Returns a Promise (which the server awaits) that resolves once every
+  // device has disconnected and released its GATT claim, or STOP_TIMEOUT_MS
+  // has passed — so a config save's restart doesn't connect while the old
+  // session is still closing.
   plugin.stop = function () {
-    activeDevices.forEach((d) => d.stop());
+    const stopping = activeDevices.map((d) => Promise.resolve(d.stop()).catch((err) => log(`Device stop failed: ${err.message}`)));
     activeDevices = [];
     if (waitingStatusTimer) {
       clearInterval(waitingStatusTimer);
@@ -567,6 +591,15 @@ module.exports = function (app) {
       scanner.stopAll();
       scanner = null;
     }
+    if (stopping.length === 0) return Promise.resolve();
+    let timer;
+    const timeout = new Promise((resolve) => {
+      timer = setTimeout(() => {
+        log(`Timed out after ${STOP_TIMEOUT_MS / 1000}s waiting for device(s) to disconnect`);
+        resolve();
+      }, STOP_TIMEOUT_MS);
+    });
+    return Promise.race([Promise.all(stopping), timeout]).finally(() => clearTimeout(timer));
   };
 
   return plugin;
