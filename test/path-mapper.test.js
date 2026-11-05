@@ -2,7 +2,7 @@
 
 const { test, describe } = require("node:test");
 const assert = require("node:assert/strict");
-const { buildDelta, resolvePath, convertUnits, roundToScale } = require("../lib/path-mapper");
+const { buildDelta, buildMetaDelta, resolvePath, convertUnits, roundToScale } = require("../lib/path-mapper");
 
 describe("convertUnits", () => {
   test("converts Celsius to Kelvin", () => {
@@ -192,5 +192,65 @@ describe("buildDelta", () => {
       const paths = delta.updates[0].values.map((v) => v.path);
       assert.ok(!paths.includes("electrical.batteries.house.capacity.remaining"));
     });
+  });
+});
+
+describe("buildMetaDelta", () => {
+  function field(fieldName, opts = {}) {
+    return { fieldName, register: 1, count: 1, dataType: "uint16", scale: 1, offset: 0, unit: "", signalkPath: "", ...opts };
+  }
+
+  test("returns null when every published path is in the SignalK spec", () => {
+    const fields = [field("battery_soc"), field("battery_voltage"), field("dc_input_power")];
+    assert.equal(buildMetaDelta(fields, "house", "src"), null);
+  });
+
+  test("gives units for non-spec paths, substituting the device name", () => {
+    const fields = [
+      field("battery_voltage"),
+      field("internal_temperature"),
+      field("power_generation"),
+      field("pv_s2_voltage"),
+      field("grid_p2_current"),
+      field("ac_p3_power"),
+      field("sm_p1_power"),
+    ];
+    const delta = buildMetaDelta(fields, "house", "src");
+    assert.equal(delta.updates[0].source.label, "src");
+    assert.ok(delta.updates[0].timestamp);
+    assert.equal(delta.updates[0].values, undefined);
+    const units = Object.fromEntries(delta.updates[0].meta.map((m) => [m.path, m.value.units]));
+    assert.deepEqual(units, {
+      "electrical.batteries.house.controllerTemperature": "K",
+      "electrical.solar.house.energyGeneratedTotal": "J",
+      "electrical.solar.house.pv2.panelVoltage": "V",
+      "electrical.chargers.house.L2.current": "A",
+      "electrical.inverters.house.ac.L3.realPower": "W",
+      "electrical.inverters.house.smartMeter.L1.power": "W",
+    });
+    for (const m of delta.updates[0].meta) assert.ok(m.value.description);
+  });
+
+  test("matches a YAML path override that resolves to a non-spec path, once per path", () => {
+    const fields = [field("my_pv2_watts", { signalkPath: "electrical.solar.{name}.pv2.panelPower" }), field("pv_s2_power")];
+    const delta = buildMetaDelta(fields, "house", "src");
+    assert.deepEqual(delta.updates[0].meta, [
+      { path: "electrical.solar.house.pv2.panelPower", value: { units: "W", description: "Second PV string power" } },
+    ]);
+  });
+
+  test("covers every non-spec path a bundled device configuration publishes", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const { loadRegisters } = require("../lib/register-loader");
+    const dir = path.join(__dirname, "..", "devices");
+    const nonSpec = /\.(pv2|L[123]|smartMeter)\.|energyGeneratedTotal|controllerTemperature/;
+    for (const file of fs.readdirSync(dir).filter((f) => /\.ya?ml$/.test(f))) {
+      const fields = loadRegisters(path.join(dir, file));
+      const published = fields.map((f) => resolvePath(f, "x")).filter((p) => nonSpec.test(p));
+      const delta = buildMetaDelta(fields, "x", "src");
+      const withMeta = new Set(delta ? delta.updates[0].meta.map((m) => m.path) : []);
+      for (const p of published) assert.ok(withMeta.has(p), `${file}: ${p} has no unit metadata`);
+    }
   });
 });

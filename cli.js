@@ -305,7 +305,7 @@ async function printRegisterValues(bleDevice, mac, args) {
     });
     device.start();
   });
-  device.stop();
+  await device.stop();
 
   const rows = [];
   for (const field of fields) {
