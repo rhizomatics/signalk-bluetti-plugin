@@ -2,7 +2,7 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [2.2.2]
+## [2.2.1]
 
 - Publish units for the paths outside the SignalK spec (second PV string `pv2.*`, per-phase `L1`..`L3` charger/inverter/smart-meter values, `energyGeneratedTotal`, `controllerTemperature`), sent once per device at connect, so displays and unit conversion work for them
 - Plugin stop now waits (up to 5s) for each device to disconnect and release its GATT claim, so a config save no longer restarts the plugin while the old connection is still closing
