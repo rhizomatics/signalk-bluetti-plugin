@@ -21,6 +21,8 @@ SignalK server 2.31.0 added a server-managed [BLE API](https://demo.signalk.org/
 
 This plugin supports this with the **Use the SignalK BLE Manager API** setting (on by default, only shown once your server is on 2.31.0+ and BLE Manager enabled). It also requires either a local bluetooth adapter, or a BLE gateway to be configured - switch on the server's own **Local Bluetooth Adapter** in **Server → Settings → Bluetooth** and monitor it in the **Data -> BLE Manager** page.
 
+SignalK server **2.35.0 or later** is recommended for BLE Manager use: 2.34.0 fixed several BLE Manager connection problems, and 2.35.0 makes the server stop plugins cleanly on shutdown and on the admin UI's Restart button, so this plugin's Bluetooth connections are closed properly each time.
+
 #### SignalK server
 
 - **Linux** is required if using a Bluetooth adapter on the server

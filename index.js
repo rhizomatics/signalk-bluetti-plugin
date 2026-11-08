@@ -308,7 +308,8 @@ module.exports = function (app) {
     // server restarts — release it now regardless of which transport we're
     // about to use this session. releaseGATTDevice() is a no-op if we don't
     // hold the claim, and rejects (harmlessly, for us to ignore) if someone
-    // else does.
+    // else does. Servers from 2.34.0 release a stopped plugin's claims
+    // themselves (signalk-server#3093), so this only matters before that.
     if (bleApiAvailable) {
       for (const cfg of devices) {
         app.bleApi.releaseGATTDevice(cfg.address, PLUGIN_ID).catch(() => {});

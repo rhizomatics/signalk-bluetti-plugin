@@ -2,3 +2,6 @@
 gh = "latest"
 # Latest 22.x: the SignalK versions policy's minimum major
 node = "22"
+oxfmt = "latest"
+oxlint = "latest"
+prek = "latest"

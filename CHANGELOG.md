@@ -2,6 +2,11 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.2]
+
+- **BLE Manager**: plugin stop cancels a connection attempt still in progress instead of waiting for it, so the device is free straight away for the restarted plugin (needs SignalK server `v2.34.0`+)
+- Recommend SignalK server `v2.35.0` as minimum for BLE Manager use, which adds clean plugin shutdown on server stop and on the admin UI's Restart button, on top of `v2.34.0`'s BLE fixes
+
 ## [2.2.1]
 
 - Publish units for the paths outside the SignalK spec (second PV string `pv2.*`, per-phase `L1`..`L3` charger/inverter/smart-meter values, `energyGeneratedTotal`, `controllerTemperature`), sent once per device at connect, so displays and unit conversion work for them
@@ -16,7 +21,7 @@ All notable changes to this plugin are documented here. Format loosely follows [
 - The new SignalK **BLE Manager** is now the default
   - Ensures this plugin co-operates well with other BLE plugins
   - Recommend use of `v2.34.0` of SignalK as minimum, which has several important BLE fixes
-  - Original direct mode remains working as an optin to fall back to
+  - Original direct mode remains working as an option to fall back to
 
 ## [2.1.4]
 
