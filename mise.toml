@@ -1,4 +1,9 @@
+[settings]
+# Cooldown for tool upgrades (policies/project_standards.md in rhizomatics/hq)
+minimum_release_age = "7d"
+
 [tools]
+prek = "latest"
 gh = "latest"
 # Latest 22.x: the SignalK versions policy's minimum major
 node = "22"
