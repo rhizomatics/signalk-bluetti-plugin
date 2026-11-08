@@ -2,6 +2,10 @@
 
 All notable changes to this plugin are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.3]
+
+- **BLE Manager**: Revert cancel connection attempt on plugin stop
+
 ## [2.2.2]
 
 - **BLE Manager**: plugin stop cancels a connection attempt still in progress instead of waiting for it, so the device is free straight away for the restarted plugin (needs SignalK server `v2.34.0`+)
