@@ -5,7 +5,7 @@
 [![SignalK Plugin CI](https://github.com/rhizomatics/signalk-bluetti-plugin/actions/workflows/signalk-ci.yml/badge.svg)](https://github.com/rhizomatics/signalk-bluetti-plugin/actions/workflows/signalk-ci.yml)
 ![code style: oxfmt](https://img.shields.io/badge/code_style-oxfmt-blue.svg)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/rhizomatics/signalk-bluetti-plugin/blob/main/LICENSE)
-[![boat tech directory](https://boat-tech-directory.rhizomatics.org.uk/images/badge.svg)](https://boat-tech-directory.rhizomatics.org.uk) [![managed by hq](https://raw.githubusercontent.com/rhizomatics/hq/main/assets/badge-managed-by-hq.svg)](https://github.com/rhizomatics/hq)
+[![boat tech directory](https://boat-tech-directory.rhizomatics.org.uk/images/badge.svg)](https://boat-tech-directory.rhizomatics.org.uk) [![managed by hq](https://raw.githubusercontent.com/rhizomatics/hq/main/assets/badge-managed-by-hq.svg)](https://hq.rhizomatics.org.uk/)
 
 A SignalK plugin to display data from Bluetti power stations over a Bluetooth Low Energy (BLE) connection. Supports 20+ stations, extensible by configuration. Also offers a CLI for easier exploring and debugging, and optional support for the BLE Manager API introduced in SignalK Server 2.31.0.
 
